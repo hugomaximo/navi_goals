@@ -5,6 +5,7 @@
 
 // ros
 #include <ros/ros.h>
+#include <std_msgs/Float64.h>
 // ros package to access package directory
 #include <ros/package.h>
 // move base
@@ -28,6 +29,7 @@ typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseCl
 // The >> operator disappeared in yaml-cpp 0.5, so this function is
 // added to provide support for code written under the yaml-cpp 0.3 API.
 template<typename T>
+
 void operator >> ( const YAML::Node& node, T& i )
 {
   i = node.as<T>();
@@ -36,7 +38,7 @@ void operator >> ( const YAML::Node& node, T& i )
 /*
    Build waypoints from yaml file
 */
-bool buildWaypointsFromFile(std::vector<geometry_msgs::PointStamped> &waypoints) // pass array of PointStamped messages by reference
+bool buildWaypointsFromFile(std::vector<geometry_msgs::PointStamped> &waypoints, double &lenghtW) // pass array of PointStamped messages by reference
 {
   // clear waypoints vector
   waypoints.clear();
@@ -71,6 +73,8 @@ bool buildWaypointsFromFile(std::vector<geometry_msgs::PointStamped> &waypoints)
     const YAML::Node &wp_node_tmp = yaml_node[ "waypoints" ];
     const YAML::Node *wp_node = wp_node_tmp ? &wp_node_tmp : NULL;
 
+    const YAML::Node &wp_node_lenght = yaml_node[ "lenght" ];
+
     if (wp_node != NULL)
     {
       // loop over all the waypoints
@@ -82,7 +86,8 @@ bool buildWaypointsFromFile(std::vector<geometry_msgs::PointStamped> &waypoints)
 
         (*wp_node)[i]["point"]["x"] >> point.point.x;
         (*wp_node)[i]["point"]["y"] >> point.point.y;
-        (*wp_node)[i]["point"]["th"] >> point.point.z;  // 'th' from here on is 'z'
+        (*wp_node)[i]["point"]["th"] >> point.point.z; 
+        (*wp_node_lenght)["lenght"] >> lenghtW;
         waypoints.push_back(point);
       }
     }
@@ -106,7 +111,7 @@ bool buildWaypointsFromFile(std::vector<geometry_msgs::PointStamped> &waypoints)
 /*
    Build Navigation Goal Message and send to MoveBase
 */
-void run(std::string ref_frame, move_base_msgs::MoveBaseGoal &goal, const std::vector<geometry_msgs::PointStamped> &waypoints, int index)
+void run(std::string ref_frame, move_base_msgs::MoveBaseGoal &goal, const std::vector<geometry_msgs::PointStamped> &waypoints, double index)
 {
   // tell the action client that we want to spin a thread by default
   MoveBaseClient action_client( "move_base", true );
@@ -151,6 +156,7 @@ int main( int argc, char **argv )
   ros::init( argc, argv, "waypoint_nav_node" ); // create node
   ros::NodeHandle ros_nh; // Start the roscpp node by creating a ros node handle
 
+  double lenghtW;
   // referece frame
   std::string ref_frame = "map"; // or use "base_link" for targets in the frame relative to the robots position
   // declare an array of PointStamped messages to keep track of the waypoints
@@ -158,8 +164,10 @@ int main( int argc, char **argv )
   // declare 'goal' to use it to keep each waipoints coordinates (double)
   move_base_msgs::MoveBaseGoal goal;
   uint8_t task = 0;
+
+  double index;
   // parse waypoints from YAML file
-  bool built = buildWaypointsFromFile(waypoints);
+  bool built = buildWaypointsFromFile(waypoints, lenghtW);
   if ( !built )
   {
     ROS_FATAL( "building waypoints from a file failed" );
@@ -174,10 +182,13 @@ while(ros::ok())
     case 0:
       ROS_INFO_ONCE("Moving to pick up place");
       // funtion call to run waypoint navigation to waypoint 0
-      run(ref_frame, goal, waypoints, 0);
-      ROS_INFO_ONCE("Loading of goods ... (waiting 5 seconds)");
-      ros::Duration(5).sleep(); 
-      task = 1;
+      run(ref_frame, goal, waypoints, index);
+      //ROS_INFO_ONCE("Loading of goods ... (waiting 5 seconds)");
+      //ros::Duration(5).sleep(); 
+      index += 1;
+
+      if(index > lenghtW) task = 3;
+
       break;
     
     case 1:
@@ -188,8 +199,15 @@ while(ros::ok())
       break;
     
     case 2:
-      ROS_INFO_ONCE("Done!");
+      // funtion call to run waypoint navigation to waypoint 2
+      run(ref_frame, goal, waypoints, 2);
+      task = 3;
       break;
+
+    case 3:
+      ROS_INFO_ONCE("DONE!");
+      break;
+      
     }
 }
   return 0;

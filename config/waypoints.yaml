@@ -1,10 +1,20 @@
+length: 4
+
 waypoints:
   - point:
-      x: 3.0
-      y: 2.0
+      x: 0
+      y: 0
       th: 0 # in degree
   - point:
-      x: -3.0
-      y: 2.0
+      x: 3.959780200194285
+      y: 0.051021550029830345
+      th: 0 # in degree
+  - point:
+      x: 7.314414441521409
+      y: 0.051021550029830345
       th: 0 # in degree 
-  
+  - point:
+      x: 10.314414441521409
+      y: 0.051021550029830345
+      th: 0 # in degree   
+
