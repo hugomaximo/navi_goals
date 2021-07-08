@@ -1,6 +1,8 @@
 /*
   Author: Roberto Zegers
   Date: 2019-March-22
+  Modifications: Hugo
+  Last modification: 2021-july-08
 */
 
 // ros
@@ -178,6 +180,7 @@ void boolTopic_handle(std_msgs::Bool boolValue){
       boolTopic_pub2.publish(boolValue);
      }
      ROS_INFO_STREAM("valueBool: " << valueBool);
+
 }
 
 /*
@@ -207,40 +210,6 @@ ros::Rate rate(1); // in Hz, makes a best effort at maintaining a particular rat
 while(ros::ok())
   {
     ros::Subscriber sub = ros_nh.subscribe("boolTopic", 1000, boolTopic_handle);
-/*  switch (task)
-    {
-    case 0:{
-      ROS_INFO_ONCE("Moving to pick up place");
-      // funtion call to run waypoint navigation to waypoint 0
-      run(ref_frame, goal, waypoints, index);
-      //ROS_INFO_ONCE("Loading of goods ... (waiting 5 seconds)");
-      //ros::Duration(5).sleep(); 
-      index += 1; 
-      if(index >= lenghtW) task = 3;
-    }break;
-    
-    case 1:{
-      ROS_INFO_ONCE("Waiting next command...");
-      ROS_INFO_STREAM( "Value: " << value);
-      if(value == true) task = 0;
-      // funtion call to run waypoint navigation to waypoint 1
-      //run(ref_frame, goal, waypoints, 1);
-      //task = 2;
-    }break;
-    
-    case 2:{
-      // funtion call to run waypoint navigation to waypoint 2
-      run(ref_frame, goal, waypoints, 2);
-      task = 3;
-    }break;
-
-    case 3:{
-      ROS_INFO_ONCE("DONE!");
-      ros::Duration(3).sleep();
-      task = 1;
-    }break;
-      
-    } */
     ros::spin();
 }
   return 0;
